@@ -22,13 +22,14 @@ def main():
         screen = setup()
 
         # show welcome screen
-        goFirst, level, mode= welcome.render(screen)
+        goFirst, level, mode = welcome.render(screen)
 
         print(mode)
         #If user decided to escape
-        if(goFirst==-1 and level==-1):
+        if(goFirst ==-1 and level ==-1):
             print("Program exited.")
             sys.exit()
+
         ###############
         #Who get to go first
         if (goFirst==1): player=-1 
@@ -42,6 +43,7 @@ def main():
         ###############
         counter=0
         demo.move(mm.board.current_board,screen,counter)
+
         win=0
         while True:
             previous_board=mm.board.copy_board(mm.board.current_board)
@@ -97,6 +99,10 @@ def main():
         mm.board.previous_board=[[]]
         if(restart):pass
         else: break
-clock = pygame.time.Clock()
-clock.tick(60)
-main()
+
+
+if __name__ == "__main__":
+    clock = pygame.time.Clock()
+    clock.tick(60)
+
+    main()

@@ -3,6 +3,7 @@ import const
 
 TEXT_COLOR = pygame.Color("#3F1D38")
 FONT_PATH = "fonts/static/Montserrat-Regular.ttf"
+FONT_BOLD_PATH = "fonts/static/Montserrat-Bold.ttf"
 
 
 def collision(outer, inner):
@@ -66,13 +67,15 @@ def render(screen: pygame.Surface):
     second_container = pygame.Rect(
         (const.SCREEN_WIDTH - container_width) / 2, container.bottom + 50, container_width, container_height)
 
-    pygame.draw.rect(screen, wrapper_color, second_container, border_radius=int(second_container.height / 2))
+    pygame.draw.rect(screen, wrapper_color, second_container,
+                     border_radius=int(second_container.height / 2))
 
     # draw inside second container
     textLevel = font.render("Chọn cấp độ Bot:", True, TEXT_COLOR)
 
     text_rect = textLevel.get_rect()
-    text_height = second_container.top + second_container.height / 2 - text_rect.height / 2
+    text_height = second_container.top + \
+        second_container.height / 2 - text_rect.height / 2
 
     screen.blit(textLevel, (30, text_height))
 
@@ -89,7 +92,7 @@ def render(screen: pygame.Surface):
     # draw play button
     button_offset = 100
     button_color = pygame.Color("#C70039")
-    button_text_color = pygame.Color("#252B48")
+    button_text_color = pygame.Color("#FFE5E5")
 
     button_width, button_height = 200, 70
 
@@ -97,13 +100,16 @@ def render(screen: pygame.Surface):
 
     human = pygame.Rect(166, button_top, button_width, button_height)
     play = pygame.Rect(482, button_top, button_width, button_height)
-    pygame.draw.rect(screen, button_color, human, border_radius=int(button_height / 2))
-    pygame.draw.rect(screen, button_color, play, border_radius=int(button_height / 2))
+    pygame.draw.rect(screen, button_color, human,
+                     border_radius=int(button_height / 2))
+    pygame.draw.rect(screen, button_color, play,
+                     border_radius=int(button_height / 2))
 
-    textVSHuman = font.render("VS người", True, button_text_color)
-    screen.blit(textVSHuman, (190, 487))
-    textVSRandom = font.render("VS random", True, button_text_color)
-    screen.blit(textVSRandom, (500, 487))
+    font = pygame.font.Font(FONT_BOLD_PATH, 25)
+    textVSHuman = font.render("Đánh với người", True, button_text_color)
+    screen.blit(textVSHuman, (190, button_top))
+    textVSRandom = font.render("Đánh với bot", True, button_text_color)
+    screen.blit(textVSRandom, (500, button_top))
     #####################
 
     pygame.display.update()
@@ -112,24 +118,30 @@ def render(screen: pygame.Surface):
     level = [0, 0, 0, 0]
     playerOut = -1
     levelOut = -1
+
     while running:
+        # draw first option
         screen.blit(check[player[0]], checkPos[0])
         screen.blit(check[player[1]], checkPos[1])
+
+        # draw level picked
         for i in range(4):
             screen.blit(check[level[i]], levelCoor[i])
+
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONUP:
                 pos = pygame.mouse.get_pos()
                 for coor in range(2):
                     if (collision(checkPos[coor], pos)):
-                        player[coor] = (player[coor]+1) % 2
+                        player[coor] = (player[coor] + 1) % 2
                         player[(coor+1) % 2] = 0
                 for coor in range(4):
                     if (collision(levelCoor[coor], pos)):
-                        level[coor] = (level[coor]+1) % 2
+                        level[coor] = (level[coor] + 1) % 2
                         for index in range(4):
                             if (index != coor):
                                 level[index] = 0
+
                 if (play.collidepoint(pos) or human.collidepoint(pos)):
                     for i in range(2):
                         if (player[i] == 1):
@@ -151,9 +163,12 @@ def render(screen: pygame.Surface):
                             return playerOut, levelOut, 1
                         if (human.collidepoint(pos)):
                             return playerOut, levelOut, 0
+
             if event.type == pygame.QUIT:
                 running = False
                 return -1, -1, -1
+
             playerOut = -1
             levelOut = -1
+
         pygame.display.update()
