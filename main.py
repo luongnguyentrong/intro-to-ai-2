@@ -6,17 +6,24 @@ import sys
 import pygame
 import playing
 import time
+import const
+
+def setup():
+    screen=pygame.display.set_mode((const.SCREEN_WIDTH ,const.SCREEN_HEIGHT))
+    pygame.display.set_caption("Bài tập lớn 2 - Game Playing")
+
+    return screen
+
 
 def main():
     pygame.init() 
+
     while True:
-        #Setting up UI
-        screen=pygame.display.set_mode((800,600))
-        pygame.display.set_caption("Cờ gánh")
-        icon = pygame.image.load("./img/logo.png")
-        pygame.display.set_icon(icon)
-        ###############
-        goFirst,level,mode=welcome.welcome(screen)
+        screen = setup()
+
+        # show welcome screen
+        goFirst, level, mode= welcome.render(screen)
+
         print(mode)
         #If user decided to escape
         if(goFirst==-1 and level==-1):
