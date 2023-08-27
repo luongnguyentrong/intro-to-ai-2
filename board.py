@@ -2,6 +2,7 @@ import pygame
 import minimax
 import const
 import random
+import time
 
 BOARD_SIZE = 400
 board_left = const.SCREEN_WIDTH / 2 - BOARD_SIZE / 2
@@ -133,7 +134,32 @@ def draw_winner(screen: pygame.Surface, board_state: list, first_turn: int):
     text_left = const.SCREEN_WIDTH / 2 - text_rect.width / 2
     text_top = container.top + container.height / 2 - text_rect.height / 2
     screen.blit(textTitle, (text_left, text_top))
+
+def draw_bot_move(screen: pygame.Surface, bot_info: tuple):
+    move, proccess_time = bot_info
+    old_pos, new_pos = move
+
+    # draw outside container
+    container_width, container_height = 600, 80
+
+    container_top = board_top + BOARD_SIZE + 50
+
+    left = const.SCREEN_WIDTH / 2 - container_width / 2
+    container = pygame.Rect(left, container_top, container_width, container_height)
+    pygame.draw.rect(screen, pygame.Color("#FFE5E5"), container, border_radius=int(container_height / 2))
+
+    fontTitle = pygame.font.Font("fonts/static/Montserrat-Bold.ttf", 20)
+    textTitle = fontTitle.render(f"Bot di chuyển từ {old_pos} đến {new_pos}", True, const.TEXT_COLOR)
+
+    text_rect = textTitle.get_rect()
+
+    text_left = const.SCREEN_WIDTH / 2 - text_rect.width / 2
+    text_top = container.top + container.height / 2 - text_rect.height 
+    screen.blit(textTitle, (text_left, text_top))
     
+    text_top = text_top + 40
+    textTitle = fontTitle.render("Thời gian xử lý: %.2f giây" % proccess_time, True, const.TEXT_COLOR)
+    screen.blit(textTitle, (text_left, text_top))
 
 def render(screen: pygame.Surface, board_state: list, first_turn: int, mode: int, level):
     current_turn = 1
@@ -152,10 +178,13 @@ def render(screen: pygame.Surface, board_state: list, first_turn: int, mode: int
 
     current_step = 1
 
+    # save bot move
+    bot_info = None
+
     running = True
     while running:
         for event in pygame.event.get():
-            # quite game
+            # quit game
             if event.type == pygame.QUIT:
                 running = False
 
@@ -175,6 +204,9 @@ def render(screen: pygame.Surface, board_state: list, first_turn: int, mode: int
                     for block, _ in next_move_blocks:
                         pygame.draw.rect(screen, pygame.Color("#FF6969"), block)
 
+                    # draw previous bot move
+                    if bot_info is not None:
+                        draw_bot_move(screen=screen, bot_info=bot_info)
                 else:
                     # Random Agent
                     moves = minimax.get_all_moves(current_board=current_board, previous_board=prev_board, player=current_turn)
@@ -191,6 +223,9 @@ def render(screen: pygame.Surface, board_state: list, first_turn: int, mode: int
                     draw_board(screen=screen, board_state=current_board)
 
             else:
+                # mark starting time
+                start_time = time.time()
+
                 # get bot turn
                 move = minimax.move(prev_board=prev_board, board=current_board, player=current_turn, tree_depth=level)
 
@@ -200,8 +235,10 @@ def render(screen: pygame.Surface, board_state: list, first_turn: int, mode: int
                 # flip current turn
                 current_turn *= -1
 
-                draw_board(screen=screen, board_state=current_board)
+                # save bot move
+                bot_info = (move, time.time() - start_time)
 
+                draw_board(screen=screen, board_state=current_board)
 
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONUP:
