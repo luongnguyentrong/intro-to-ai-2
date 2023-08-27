@@ -1,26 +1,6 @@
 import pygame
+import helper
 import const
-
-TEXT_COLOR = pygame.Color("#3F1D38")
-FONT_PATH = "fonts/static/Montserrat-Regular.ttf"
-FONT_BOLD_PATH = "fonts/static/Montserrat-Bold.ttf"
-
-
-def collision(outer, inner):
-    return outer[0] <= inner[0] and outer[0]+40 >= inner[0] and outer[1] <= inner[1] and outer[1]+40 >= inner[1]
-
-
-def draw_title(screen: pygame.Surface):
-    fontTitle = pygame.font.Font(FONT_PATH, 50)
-    textTitle = fontTitle.render("CỜ GÁNH", True, TEXT_COLOR)
-
-    text_rect = textTitle.get_rect()
-
-    top_offset = 60
-    screen.blit(textTitle, (const.SCREEN_WIDTH /
-                2 - text_rect.width / 2, top_offset))
-
-    return text_rect.bottom
 
 
 def render(screen: pygame.Surface):
@@ -29,90 +9,31 @@ def render(screen: pygame.Surface):
     # set background color
     screen.fill(pygame.Color("#FBF0B2"))
 
-    draw_title(screen=screen)
+    helper.draw_title(screen=screen)
 
     # set color
     wrapper_color = pygame.Color("#CEDEBD")
 
-    # select first player
-    container_width, container_height = 760, 80
-    container = pygame.Rect(
-        (const.SCREEN_WIDTH - container_width) / 2, 200, container_width, container_height)
-    pygame.draw.rect(screen, wrapper_color, container,
-                     border_radius=int(container_height / 2))
+    # draw options to select first player
+    container, first_box_left, second_box_left = helper.draw_pick_player(screen=screen, wrapper_color=wrapper_color)
 
-    font = pygame.font.Font(FONT_PATH, 25)
-    textFirst = font.render("Chọn người chơi trước:", True, TEXT_COLOR)
-
-    textRan = font.render("Agent Random/Người", True, TEXT_COLOR)
-    textBot = font.render("Bot", True, TEXT_COLOR)
-
-    text_rect = textFirst.get_rect()
-    text_height = container.top + container.height / 2 - text_rect.height / 2
-
-    screen.blit(textFirst, (50, text_height))
-
-    screen.blit(textRan, (400, text_height))
-    screen.blit(textBot, (700, text_height))
-
-    checkPos = [(350, 205), (650, 205)]
-    uncheck = pygame.transform.scale(
-        pygame.image.load("./img/uncheck.png"), (40, 40))
-    checked = pygame.transform.scale(
-        pygame.image.load("./img/check.png"), (40, 40))
-
-    check = [uncheck, checked]
-    # Level
-    container_width, container_height = 760, 100
-    second_container = pygame.Rect(
-        (const.SCREEN_WIDTH - container_width) / 2, container.bottom + 50, container_width, container_height)
-
-    pygame.draw.rect(screen, wrapper_color, second_container,
-                     border_radius=int(second_container.height / 2))
-
-    # draw inside second container
-    textLevel = font.render("Chọn cấp độ Bot:", True, TEXT_COLOR)
-
-    text_rect = textLevel.get_rect()
-    text_height = second_container.top + \
-        second_container.height / 2 - text_rect.height / 2
-
-    screen.blit(textLevel, (30, text_height))
-
-    # draw level
-    LEVEL_COUNT = 4
-
-    levelCoor = [(i*110+350, 320) for i in range(LEVEL_COUNT)]
-
-    for i in range(LEVEL_COUNT):
-        levelText = font.render(str(i+1), True, (0, 0, 0))
-        screen.blit(levelText, (levelCoor[i][0]+15, levelCoor[i][1]+50))
-    #####################
+    # draw options to pick bot level
+    second_container, level_coors = helper.draw_pick_level(screen=screen, container=container, wrapper_color=wrapper_color)
 
     # draw play button
-    button_offset = 100
-    button_color = pygame.Color("#C70039")
-    button_text_color = pygame.Color("#FFE5E5")
+    play, human = helper.draw_play_button(screen=screen, container=second_container)
 
-    button_width, button_height = 200, 70
-
-    button_top = second_container.bottom + button_offset
-
-    human = pygame.Rect(166, button_top, button_width, button_height)
-    play = pygame.Rect(482, button_top, button_width, button_height)
-    pygame.draw.rect(screen, button_color, human,
-                     border_radius=int(button_height / 2))
-    pygame.draw.rect(screen, button_color, play,
-                     border_radius=int(button_height / 2))
-
-    font = pygame.font.Font(FONT_BOLD_PATH, 25)
-    textVSHuman = font.render("Đánh với người", True, button_text_color)
-    screen.blit(textVSHuman, (190, button_top))
-    textVSRandom = font.render("Đánh với bot", True, button_text_color)
-    screen.blit(textVSRandom, (500, button_top))
-    #####################
-
+    # event listener
+    font = pygame.font.Font(const.FONT_PATH, 25)
     pygame.display.update()
+
+    uncheck = pygame.image.load("./img/uncheck.png")
+    checked = pygame.image.load("./img/check.png")
+
+    box_height = container.top + container.height / 2 - uncheck.get_height() / 2
+    checkPos = [(first_box_left, box_height), (second_box_left, box_height)]
+
+    check = [uncheck, checked]
     running = True
     player = [0, 0]
     level = [0, 0, 0, 0]
@@ -125,19 +46,26 @@ def render(screen: pygame.Surface):
         screen.blit(check[player[1]], checkPos[1])
 
         # draw level picked
-        for i in range(4):
-            screen.blit(check[level[i]], levelCoor[i])
+        for i in range(const.LEVEL_COUNT):
+            screen.blit(check[level[i]], level_coors[i])
 
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONUP:
                 pos = pygame.mouse.get_pos()
+
+                # save first player picked
                 for coor in range(2):
-                    if (collision(checkPos[coor], pos)):
+                    if (helper.collision(checkPos[coor], pos)):
                         player[coor] = (player[coor] + 1) % 2
-                        player[(coor+1) % 2] = 0
-                for coor in range(4):
-                    if (collision(levelCoor[coor], pos)):
+                        player[(coor + 1) % 2] = 0
+
+                # save bot level picked
+                for coor in range(const.LEVEL_COUNT):
+                    if (helper.collision(level_coors[coor], pos)):
+                        # toggle picked level value
                         level[coor] = (level[coor] + 1) % 2
+
+                        # unset all other boxes
                         for index in range(4):
                             if (index != coor):
                                 level[index] = 0
@@ -146,23 +74,28 @@ def render(screen: pygame.Surface):
                     for i in range(2):
                         if (player[i] == 1):
                             playerOut = i
-                    for i in range(4):
+
+                    for i in range(const.LEVEL_COUNT):
                         if (level[i] == 1):
                             levelOut = i
+
                     if (playerOut == -1):
                         err = font.render(
-                            "Chưa chọn người đi trước!!", True, (200, 0, 0))
+                            "Bạn chưa chọn người đi trước!!", True, (200, 0, 0))
                         screen.blit(err, (30, 250))
+
                     if (levelOut == -1):
                         err = font.render(
-                            "Chưa chọn cấp độ!!", True, (200, 0, 0))
+                            "Bạn chưa chọn cấp độ!!", True, (200, 0, 0))
                         screen.blit(err, (30, 410))
+
                     if (playerOut != -1 and levelOut != -1):
                         running = False
                         if (play.collidepoint(pos)):
-                            return playerOut, levelOut, 1
+                            return playerOut, levelOut, const.GAME_MODE["RANDOM"]
+
                         if (human.collidepoint(pos)):
-                            return playerOut, levelOut, 0
+                            return playerOut, levelOut, const.GAME_MODE["HUMAN"]
 
             if event.type == pygame.QUIT:
                 running = False
